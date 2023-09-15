@@ -1,4 +1,4 @@
-# Mineria de datos Choques en la ciudad de Chicago
+# Mineria de datos Choques en la ciudad de Chicago :police_car: :oncoming_automobile: :ambulance:
 
 - Conocer la zona, hora y dia propenso a tener un choque con injuria fatal (Localizacion de ambulancia preventiva). 
 - Conocer la zona, hora y dia propenso a que haya fuga de responsable (Localizacion de camaras de seguridad).
