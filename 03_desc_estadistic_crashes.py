@@ -78,7 +78,7 @@ def main():
     
     #timeSeries_sum_ambulances_by_month("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
-    timeSeries_sum_ambulances_by_day_month_allyears("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
+    #timeSeries_sum_ambulances_by_day_month_allyears("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
 	
 
