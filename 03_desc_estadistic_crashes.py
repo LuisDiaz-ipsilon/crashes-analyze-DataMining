@@ -1,6 +1,7 @@
 import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
 
 
 def timeSeries_sum_ambulances_by_year(url:str):
@@ -64,11 +65,55 @@ def timeSeries_sum_ambulances_by_month(url:str):
             print(e)
         plt.close()
 
-def timeSeries_sum_ambulances_by_day_month_allyears(url : str):
+def map_sum_crashes_all_time(url : str):
     df = pd.read_csv(url)
+    print(df['CRASH_DATE'].min())
+    print(df['CRASH_DATE'].max())
     
-    print(df['LATITUDE'].describe())
-    print(df['LONGITUDE'].describe())
+    
+    data_crashes_all = df[['LATITUDE', 'LONGITUDE']]
+    
+    lat_min = 41.7
+    lat_max = 42.1
+    lon_min = -88.0
+    lon_max = -87.7
+    num_zonas = 4
+    
+    # Divide el rango de latitud y longitud en 10 partes iguales
+    lat_step = (lat_max - lat_min) / num_zonas
+    lon_step = (lon_max - lon_min) / num_zonas
+
+    # cálculos de la división del área geográfica en zonas de tamaño uniforme.
+    data_crashes_all['ZONE_LAT'] = ((data_crashes_all['LATITUDE'] - lat_min) // lat_step) * lat_step + lat_min + lat_step / 2
+    data_crashes_all['ZONE_LON'] = ((data_crashes_all['LONGITUDE'] - lon_min) // lon_step) * lon_step + lon_min + lon_step / 2
+
+    # Creamos un nuevo
+    crashesh_by_zone = data_crashes_all.groupby(['ZONE_LAT', 'ZONE_LON']).size().reset_index(name='CRASHES')
+
+
+    # Carga los datos geoespaciales de los municipios de Chicago
+    limits_chicago = gpd.read_file("./util/rows.json")
+    
+    # Crea un mapa de Chicago y agrega los límites de los municipios
+    fig = px.choropleth_mapbox(limits_chicago, geojson=limits_chicago.geometry, locations=limits_chicago.index, 
+                        hover_data={"name": limits_chicago["nombre"]}, color=limits_chicago.index,
+                        color_continuous_scale="Viridis", range_color=(0, len(limits_chicago)),
+                        labels={"name": "Municipio"})
+
+    # Agrega las burbujas de choques
+    fig.add_trace(px.scatter_geo(crashesh_by_zone, lat='ZONE_LAT', lon='ZONE_LON', text='CRASHES', size='CRASHES').data[0])
+
+    # Define los límites del mapa
+    fig.update_geos(
+        center={"lat": 41.85, "lon": -87.7},
+        projection_scale=15,
+        visible=False
+    )
+
+    # Muestra el mapa
+    fig.show()
+
+    
     
 
 
@@ -78,7 +123,7 @@ def main():
     
     #timeSeries_sum_ambulances_by_month("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
-    #timeSeries_sum_ambulances_by_day_month_allyears("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
+    map_sum_crashes_all_time("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
 	
 
