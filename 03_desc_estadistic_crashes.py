@@ -364,7 +364,7 @@ def map_sum_crashes_by_month_and_zone(url: str):
     fig.show()   
     
     
-def csv_sum_crashes_hit_n_run_by_month_and_zone(url: str):
+def csv_sum_crashes_hit_n_run_by_year_and_zone(url: str):
     df = pd.read_csv(url)
             
     data_crashes_hitnrun = df.loc[df['HIT_AND_RUN_I'] == "1", ['CRASH_DATE', 'LATITUDE', 'LONGITUDE']]
@@ -448,6 +448,45 @@ def csv_sum_crashes_hit_n_run_by_month_and_zone(url: str):
 
     SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.to_csv('Traffic_Crashes_-_SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.csv', index=False)
     print(SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE)
+    
+def map_sum_crashes_hit_n_run_by_year_and_zone(url: str):
+    SUM_CRASHES_BY_YEAR_AND_ZONE = pd.read_csv(url)
+    
+    #Estos puntos los obtuvimos del anterior metodo.
+    point_centers_data = {
+        'LATITUDE': [
+            41.691934, 41.691934, 41.691934, 41.691934, 41.691934,
+            41.786461, 41.786461, 41.786461, 41.786461, 41.786461,
+            41.880989, 41.880989, 41.880989, 41.880989, 41.880989,
+            41.975516, 41.975516, 41.975516, 41.975516, 41.975516
+        ],
+        'LONGITUDE': [
+            -87.895032, -87.812711, -87.730390, -87.648069, -87.565748,
+            -87.895032, -87.812711, -87.730390, -87.648069, -87.565748,
+            -87.895032, -87.812711, -87.730390, -87.648069, -87.565748,
+            -87.895032, -87.812711, -87.730390, -87.648069, -87.565748
+        ]
+    }
+    
+    point_centers = pd.DataFrame(point_centers_data)
+    
+    # Establecer el índice de point_centers para que coincida con la columna ZONE (recordando que la indexación en Python comienza desde 0)
+    point_centers['ZONE'] = point_centers.index + 1
+
+    # Fusionar dataframes
+    crashes_by_zone_and_year = pd.merge(SUM_CRASHES_BY_YEAR_AND_ZONE, point_centers, on='ZONE', how='left')
+
+    # Seleccionar las columnas deseadas y renombrarlas si es necesario
+    crashes_by_zone_and_year = crashes_by_zone_and_year[['YEAR', 'LATITUDE', 'LONGITUDE', 'SUM_CRASHES']]
+    
+    fig = px.scatter_mapbox(crashes_by_zone_and_year, lat = 'LATITUDE', lon = 'LONGITUDE', 
+                        title = "sumatoria de choques donde se requiere policia por zona (20)  que hubo de año a año en Chicago",
+                        size = 'SUM_CRASHES', color= 'SUM_CRASHES',
+                        zoom = 9, mapbox_style = 'open-street-map',
+                        animation_frame='YEAR', size_max=80)
+    
+    fig.show()   
+
 
 
 def main():
@@ -466,7 +505,9 @@ def main():
 	
     #map_sum_crashes_by_month_and_zone("Traffic_Crashes_-_SUM_CRASHES_BY_MONTH_AND_ZONE.csv")
     
-    csv_sum_crashes_hit_n_run_by_month_and_zone("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
+    #csv_sum_crashes_hit_n_run_by_year_and_zone("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
+    
+    map_sum_crashes_hit_n_run_by_year_and_zone("Traffic_Crashes_-_SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.csv")
 
 if __name__ == "__main__":
     main()
