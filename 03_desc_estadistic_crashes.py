@@ -239,7 +239,7 @@ def map_sum_crashes_by_year_and_zone(url: str):
     fig.show()
     
 
-#Contruccion
+
 def csv_sum_crashes_by_month_and_zone(url: str):
     df = pd.read_csv(url)
         
@@ -449,8 +449,93 @@ def csv_sum_crashes_hit_n_run_by_year_and_zone(url: str):
     SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.to_csv('Traffic_Crashes_-_SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.csv', index=False)
     print(SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE)
     
-def map_sum_crashes_hit_n_run_by_year_and_zone(url: str):
-    SUM_CRASHES_BY_YEAR_AND_ZONE = pd.read_csv(url)
+def csv_sum_crashes_hit_n_run_by_month_and_zone(url: str):
+    df = pd.read_csv(url)
+        
+    data_crashes_hit_n_run = df[['CRASH_DATE', 'LATITUDE', 'LONGITUDE']]
+    
+    #Ignoramos los warnings
+    pd.options.mode.chained_assignment = None
+    
+    #Obtenermos solo el MONTH
+    data_crashes_hit_n_run['CRASH_DATE'] = pd.to_datetime(data_crashes_hit_n_run['CRASH_DATE'], format="%m/%d/%Y")
+
+    data_crashes_hit_n_run['MONTH'] = data_crashes_hit_n_run['CRASH_DATE'].dt.month
+    data_crashes_hit_n_run= data_crashes_hit_n_run.drop('CRASH_DATE', axis=1)
+    
+    data_crashes_hit_n_run = data_crashes_hit_n_run[['MONTH', 'LATITUDE', 'LONGITUDE']]
+    
+
+    
+    # Se obtienen los 4 puntos mas alejados como si de un cuadrado se tratase para obtener 
+    # Los centros de estos para despues agrupar por zona y año
+    lat_norte = data_crashes_hit_n_run['LATITUDE'].max()
+    lon_norte = data_crashes_hit_n_run[data_crashes_hit_n_run['LATITUDE'] == lat_norte]['LONGITUDE'].values[0]
+    lat_sur = data_crashes_hit_n_run['LATITUDE'].min()
+    lon_sur = data_crashes_hit_n_run[data_crashes_hit_n_run['LATITUDE'] == lat_sur]['LONGITUDE'].values[0]
+    lon_este = data_crashes_hit_n_run['LONGITUDE'].max()
+    lat_este = data_crashes_hit_n_run[data_crashes_hit_n_run['LONGITUDE'] == lon_este]['LATITUDE'].values[0]
+    lon_oeste = data_crashes_hit_n_run['LONGITUDE'].min()
+    lat_oeste = data_crashes_hit_n_run[data_crashes_hit_n_run['LONGITUDE'] == lon_oeste]['LATITUDE'].values[0]
+    
+    # puntos extremos
+    norte = (lat_norte, lon_norte)
+    sur = (lat_sur, lon_sur)
+    este = (lat_este, lon_este)
+    oeste = (lat_oeste, lon_oeste)
+
+    delta_lat = (norte[0] - sur[0]) / 4
+    delta_lon = (este[1] - oeste[1]) / 5
+
+    centros = []
+
+    # Itera sobre la cuadrícula y calcula el centro de cada celda
+    for i in range(4):  # para las 4 filas
+        for j in range(5):  # para las 5 columnas
+            lat_centro = sur[0] + (i + 0.5) * delta_lat
+            lon_centro = oeste[1] + (j + 0.5) * delta_lon
+            centros.append((lat_centro, lon_centro))
+                    
+    LATITUDE = [centro[0] for centro in centros]
+    LONGITUDE = [centro[1] for centro in centros]
+    
+    point_centers = pd.DataFrame(centros, columns=["LATITUDE", "LONGITUDE"])
+    
+
+    """
+    fig = px.scatter_mapbox(point_centers,
+                    lat="LATITUDE",
+                    lon="LONGITUDE",
+                    title = "Puntos centrales de 20 zonas en chicago",
+                    zoom = 4, mapbox_style = 'open-street-map'
+                    )
+
+    
+    fig.show()"""
+    
+    # Función para calcular la distancia euclidiana
+    def compute_distance(lat1, lon1, lat2, lon2):
+        return np.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2)
+
+    # Para cada choque indicarle cual es la zona que le corresponde
+    zones = []
+    for index, crash in data_crashes_hit_n_run.iterrows():
+        distances = point_centers.apply(lambda row: compute_distance(crash['LATITUDE'], crash['LONGITUDE'], row['LATITUDE'], row['LONGITUDE']), axis=1)
+        closest_zone = distances.idxmin() + 1  # +1 porque las zonas van de 1 a 20
+        zones.append(closest_zone)
+
+    data_crashes_hit_n_run['ZONE'] = zones
+
+    # Creando nuevo data frame
+    result_df = data_crashes_hit_n_run[['MONTH', 'ZONE', 'LATITUDE', 'LONGITUDE']]
+    
+    SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE = result_df.groupby(['MONTH', 'ZONE']).size().reset_index(name='SUM_CRASHES')
+
+    SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE.to_csv('Traffic_Crashes_-_SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE.csv', index=False)
+    print(SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE)
+
+def map_sum_crashes_hit_n_run_by_month_and_zone(url: str):
+    SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE = pd.read_csv(url)
     
     #Estos puntos los obtuvimos del anterior metodo.
     point_centers_data = {
@@ -474,19 +559,18 @@ def map_sum_crashes_hit_n_run_by_year_and_zone(url: str):
     point_centers['ZONE'] = point_centers.index + 1
 
     # Fusionar dataframes
-    crashes_by_zone_and_year = pd.merge(SUM_CRASHES_BY_YEAR_AND_ZONE, point_centers, on='ZONE', how='left')
+    crashes_by_zone_and_month = pd.merge(SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE, point_centers, on='ZONE', how='left')
 
     # Seleccionar las columnas deseadas y renombrarlas si es necesario
-    crashes_by_zone_and_year = crashes_by_zone_and_year[['YEAR', 'LATITUDE', 'LONGITUDE', 'SUM_CRASHES']]
+    crashes_by_zone_and_month = crashes_by_zone_and_month[['MONTH', 'LATITUDE', 'LONGITUDE', 'SUM_CRASHES']]
     
-    fig = px.scatter_mapbox(crashes_by_zone_and_year, lat = 'LATITUDE', lon = 'LONGITUDE', 
-                        title = "sumatoria de choques donde se requiere policia por zona (20)  que hubo de año a año en Chicago",
+    fig = px.scatter_mapbox(crashes_by_zone_and_month, lat = 'LATITUDE', lon = 'LONGITUDE', 
+                        title = "sumatoria de choques que requieren policia por zona (20) mes a mes sumando todos los años",
                         size = 'SUM_CRASHES', color= 'SUM_CRASHES',
                         zoom = 9, mapbox_style = 'open-street-map',
-                        animation_frame='YEAR', size_max=80)
+                        animation_frame='MONTH', size_max=71)
     
     fig.show()   
-
 
 
 def main():
@@ -507,7 +591,11 @@ def main():
     
     #csv_sum_crashes_hit_n_run_by_year_and_zone("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
-    map_sum_crashes_hit_n_run_by_year_and_zone("Traffic_Crashes_-_SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.csv")
+    #map_sum_crashes_hit_n_run_by_year_and_zone("Traffic_Crashes_-_SUM_CRASHES_HITNRUN_BY_YEAR_AND_ZONE.csv")
+    
+    #csv_sum_crashes_hit_n_run_by_month_and_zone("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
+    
+    map_sum_crashes_hit_n_run_by_month_and_zone("Traffic_Crashes_-_SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE.csv")
 
 if __name__ == "__main__":
     main()
