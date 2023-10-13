@@ -20,29 +20,32 @@ def main():
 
     # Filtrar el dataframe original para obtener solo aquellos registros que tienen un valor ZONE
     crashes_four_zones = pd.DataFrame() 
-    crashes_four_zones['ZONE'] = df['ZONE']
-
-    # Agrupar por 'ZONE' y contar la cantidad de choques por zona
-    warnings.filterwarnings("ignore", category=FutureWarning)
-    crashes_by_zone_sum = crashes_four_zones.groupby('ZONE').size().reset_index(name='SUM_CRASHES')
+    crashes_four_zones = df[['ZONE', 'CRASH_DATE']]
     
-    print("Dataframe que indica que sucedio un choque en cada zona.")
-    crashes_four_zones['CRASH'] = 1
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+    warnings.simplefilter(action='ignore', category=pd.errors.SettingWithCopyWarning)
+    
+    # Convertir la columna CRASH_DATE a datetime
+    crashes_four_zones['CRASH_DATE'] = pd.to_datetime(crashes_four_zones['CRASH_DATE'])
 
-    # Mostrar el nuevo DataFrame
-    print(crashes_four_zones)
+    # Extraer el año de la fecha y crear una nueva columna 'YEAR'
+    crashes_four_zones['YEAR'] = crashes_four_zones['CRASH_DATE'].dt.year
+
+    # Agrupar por ZONE y YEAR y contar el número de registros para cada combinación
+    sum_crashes_by_year_zone = crashes_four_zones.groupby(['ZONE', 'YEAR']).size().reset_index(name='SUM_CRASHES')
+
+    print(sum_crashes_by_year_zone)
+
 
     # Ajuste del modelo
-    modelo = ols('CRASH ~ ZONE', data=crashes_four_zones).fit()
+    model = ols('SUM_CRASHES ~ ZONE', data=sum_crashes_by_year_zone).fit()
 
     # ANOVA
-    anova_table = sm.stats.anova_lm(modelo, typ=2)
+    anova_table = sm.stats.anova_lm(model, typ=2)
 
     print(anova_table)
     
-    print("\nSumatoria por zona: ")
-    print(crashes_by_zone_sum)
-    
+        
     # Definición de las zonas
     zonas = [
         41.644670,
@@ -71,11 +74,11 @@ def main():
     })
 
     # Inicializar el mapa
-    fig = px.scatter_mapbox(lines_map, lat='lat', lon='lon', zoom=10, center=dict(lat=41.833725, lon=-87.75), title="Prueba anova 4 zonas por choques", color=crashes_by_zone_sum['SUM_CRASHES'])
+    fig = px.scatter_mapbox(lines_map, lat='lat', lon='lon', zoom=10, center=dict(lat=41.833725, lon=-87.75), title="Prueba anova 4 zonas por choques", color=sum_crashes_by_year_zone['SUM_CRASHES'])
 
     # Normalización de la columna SUM_CRASHES para obtener colores
-    norm = plt.Normalize(crashes_by_zone_sum['SUM_CRASHES'].min(), crashes_by_zone_sum['SUM_CRASHES'].max())
-    colors = plt.cm.plasma_r(norm(crashes_by_zone_sum['SUM_CRASHES']))
+    norm = plt.Normalize(sum_crashes_by_year_zone['SUM_CRASHES'].min(), sum_crashes_by_year_zone['SUM_CRASHES'].max())
+    colors = plt.cm.plasma_r(norm(sum_crashes_by_year_zone['SUM_CRASHES']))
 
     for i in range(len(zonas) - 1):
         lat_center = (zonas[i] + zonas[i+1]) / 2
@@ -89,7 +92,7 @@ def main():
             textposition="middle center",
             textfont=dict(size=18, color='white'),
             hoverinfo='text',
-            hovertext=f"ZONE {crashes_by_zone_sum['ZONE'][i]}: {crashes_by_zone_sum['SUM_CRASHES'][i]} crashes"
+            hovertext=f"ZONE {sum_crashes_by_year_zone['ZONE'][i]}: {sum_crashes_by_year_zone['SUM_CRASHES'][i]} crashes"
         ))
 
     fig.update_layout(mapbox_style="open-street-map")

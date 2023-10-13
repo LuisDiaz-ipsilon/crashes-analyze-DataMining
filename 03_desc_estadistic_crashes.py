@@ -573,7 +573,7 @@ def map_sum_crashes_hit_n_run_by_month_and_zone(url: str):
 
 
 def main():
-
+    
 	#timeSeries_sum_ambulances_by_year("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
     #timeSeries_sum_ambulances_by_month("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
@@ -594,7 +594,7 @@ def main():
     
     #csv_sum_crashes_hit_n_run_by_month_and_zone("Traffic_Crashes_-_Crashes_cleaned_normalized.csv")
     
-    map_sum_crashes_hit_n_run_by_month_and_zone("Traffic_Crashes_-_SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE.csv")
+    #map_sum_crashes_hit_n_run_by_month_and_zone("Traffic_Crashes_-_SUM_CRASHES_HIT_N_RUN_BY_MONTH_AND_ZONE.csv")
 
 if __name__ == "__main__":
     main()
