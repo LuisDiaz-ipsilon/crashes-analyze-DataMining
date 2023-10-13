@@ -7,6 +7,7 @@ from datetime import datetime
 import numpy as np
 
 
+
 def timeSeries_sum_ambulances_by_year(url:str):
     df = pd.read_csv(url)
 
@@ -14,8 +15,6 @@ def timeSeries_sum_ambulances_by_year(url:str):
 	#Cantidad de choques que requieren de ambulancia por fecha
 	#Para esto es necesario eliminar todos los registros que no requirieron ambulancia 
 	#Y todos los que si solo colocarles 1 y no 2, 3, 4 ....
-
-
 
     df['CRASH_DATE'] = pd.to_datetime(df['CRASH_DATE'], format='%m/%d/%Y')
     
@@ -85,11 +84,11 @@ def map_sum_crashes_all_time(url : str):
 
     #Ignoramos los warnings
     pd.options.mode.chained_assignment = None
-    # cálculos de la división del área geográfica en zonas de tamaño uniforme.
+    #Agrupamos por la zona en donde se encuentra
     data_crashes_all.loc[:, 'ZONE_LAT'] = ((data_crashes_all['LATITUDE'] - lat_min) // lat_step) * lat_step + lat_min + lat_step / 2
     data_crashes_all.loc[:, 'ZONE_LON'] = ((data_crashes_all['LONGITUDE'] - lon_min) // lon_step) * lon_step + lon_min + lon_step / 2
 
-    # Creamos un nuevo
+    #Data set aux almacenando por grupos conforme a la zona 
     crashesh_by_zone = data_crashes_all.groupby(['ZONE_LAT', 'ZONE_LON']).size().reset_index(name='CRASHES')
 
     fig = px.scatter_mapbox(crashesh_by_zone, lat = 'ZONE_LAT', lon = 'ZONE_LON', 
@@ -147,6 +146,7 @@ def csv_sum_crashes_by_year(url: str, year: int):
     este = (lat_este, lon_este)
     oeste = (lat_oeste, lon_oeste)
 
+    #Creamos los valores que determinara el tamaño de las cuadriculas en el mapa
     delta_lat = (norte[0] - sur[0]) / 4
     delta_lon = (este[1] - oeste[1]) / 5
 
@@ -181,7 +181,7 @@ def csv_sum_crashes_by_year(url: str, year: int):
     def compute_distance(lat1, lon1, lat2, lon2):
         return np.sqrt((lat1 - lat2) ** 2 + (lon1 - lon2) ** 2)
 
-    # Para cada choque indicarle cual es la zona que le corresponde
+    # Para cada choque indicarle cual es la zona que le corresponde en base a el calculo euclidiana
     zones = []
     for index, crash in data_crashes_all.iterrows():
         distances = point_centers.apply(lambda row: compute_distance(crash['LATITUDE'], crash['LONGITUDE'], row['LATITUDE'], row['LONGITUDE']), axis=1)
@@ -190,7 +190,6 @@ def csv_sum_crashes_by_year(url: str, year: int):
 
     data_crashes_all['ZONE'] = zones
 
-    # Creando nuevo data frame
     result_df = data_crashes_all[['YEAR', 'ZONE', 'LATITUDE', 'LONGITUDE']]
 
     print(result_df)
@@ -221,13 +220,13 @@ def map_sum_crashes_by_year_and_zone(url: str):
     
     point_centers = pd.DataFrame(point_centers_data)
     
-    # Establecer el índice de point_centers para que coincida con la columna ZONE (recordando que la indexación en Python comienza desde 0)
+    #Creamos un data set con los 20 puntos
     point_centers['ZONE'] = point_centers.index + 1
 
-    # Fusionar dataframes
+    #Fusionamos la zona con el lugar de choque
     crashes_by_zone_and_year = pd.merge(SUM_CRASHES_BY_YEAR_AND_ZONE, point_centers, on='ZONE', how='left')
 
-    # Seleccionar las columnas deseadas y renombrarlas si es necesario
+    #Ordenamos
     crashes_by_zone_and_year = crashes_by_zone_and_year[['YEAR', 'LATITUDE', 'LONGITUDE', 'SUM_CRASHES']]
     
     fig = px.scatter_mapbox(crashes_by_zone_and_year, lat = 'LATITUDE', lon = 'LONGITUDE', 
@@ -259,7 +258,7 @@ def csv_sum_crashes_by_month_and_zone(url: str):
 
     
     # Se obtienen los 4 puntos mas alejados como si de un cuadrado se tratase para obtener 
-    # Los centros de estos para despues agrupar por zona y año
+    # Los centros de estos para despues agrupar por zona y mes
     lat_norte = data_crashes_all['LATITUDE'].max()
     lon_norte = data_crashes_all[data_crashes_all['LATITUDE'] == lat_norte]['LONGITUDE'].values[0]
     lat_sur = data_crashes_all['LATITUDE'].min()
