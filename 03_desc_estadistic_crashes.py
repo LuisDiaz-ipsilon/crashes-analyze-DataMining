@@ -98,7 +98,7 @@ def map_sum_crashes_all_time(url : str):
                         
     fig.show()
     
-def csv_sum_crashes_by_year(url: str, year: int):
+def csv_sum_crashes_by_year_and_zone(url: str, year: int):
     df = pd.read_csv(url)
     year_min = df['CRASH_DATE'].min()
     year_max= df['CRASH_DATE'].max()
