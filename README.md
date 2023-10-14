@@ -9,4 +9,10 @@
 
 ![Se subrayaron los campos de interes en el dataset](/img1.PNG)
 
+![Suma de choques por zona mes a mes de los años 2015-2023](/images/sum_crashes_by_zone_and_month_all_years.PNG)
+
+![Anova test por 4 zona divididas por latitud](/images/anova_test_sum_by_zone_allyears.PNG)
+
+![Regresion lineal hora del choque con cantidad promedio de lesionados](/images/linear_regression_mean_injuries_in_crashes_chicago.PNG)
+
 
