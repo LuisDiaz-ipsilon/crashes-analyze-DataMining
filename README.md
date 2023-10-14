@@ -13,6 +13,6 @@
 
 ![Anova test por 4 zona divididas por latitud](/images/anova_test_sum_by_zone_allyears.PNG)
 
-![Regresion lineal hora del choque con cantidad promedio de lesionados](/images/linear_regression_mean_injuries_in_crashes_chicago.PNG)
+![Regresion lineal hora del choque con cantidad promedio de lesionados](/images/linear_regression_mean_injuries_in_crashes_chicago.png)
 
 
