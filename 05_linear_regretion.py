@@ -17,6 +17,9 @@ def main():
     # LA HORA 1 SON LAS 6 PM y la hora 24 son las 5 AM, esto para saber si 
     # la noche hace que sea mas posible una lesion
     
+    #Coeficiente (pendiente): -0.0036586476147908143
+    #Intercepto: 0.242187892070799
+    
     crashes_hour_and_injuries = df[['CRASH_HOUR', 'INJURIES_TOTAL']]
     
     crashes_hour_and_injuries['CRASH_HOUR'] = crashes_hour_and_injuries['CRASH_HOUR'].apply(lambda x: x if 0 <= x <= 23 else np.nan)        
@@ -57,7 +60,6 @@ def main():
     # Calcula el promedio de INJURIES_TOTAL para cada hora
     crashes_by_hour_prom = crashes_hour_and_injuries.groupby('CRASH_HOUR')['INJURIES_TOTAL'].mean().reset_index()
 
-    # Renombra la columna para reflejar que es el promedio
     crashes_by_hour_prom = crashes_by_hour_prom.rename(columns={'INJURIES_TOTAL': 'INJURIES_PROM'})
     print(crashes_by_hour_prom)
 
@@ -65,7 +67,7 @@ def main():
     plt.xlabel('Hora del Accidente')
     plt.ylabel('Promedio de Lesiones')
     plt.title('Dispersión del promedio de Lesiones por Hora del Accidente HORA 1: 6 AM, HORA 6: 11 AM, HORA 17: 10 PM')
-    plt.savefig("images/dispersion_crashes_injuries_by_hour_prom_.png")
+    #plt.savefig("images/dispersion_crashes_injuries_by_hour_prom_.png")
     plt.close()
     
     
@@ -73,10 +75,7 @@ def main():
     X = crashes_by_hour_prom[['CRASH_HOUR']]
     y = crashes_by_hour_prom['INJURIES_PROM']
 
-    # Crear un modelo de regresión lineal
     model = LinearRegression()
-
-    # Ajustar el modelo
     model.fit(X, y)
 
     # Hacer predicciones para las mismas horas
@@ -91,7 +90,7 @@ def main():
     plt.ylabel('Promedio de personas heridas')
     plt.title('Regresion lineal hora a hora y promedio de personas lesionadas 2015-2023\n HORA 1: 6 AM, HORA 6: 11 AM, HORA 17: 10 PM')
     plt.legend()
-    plt.savefig("images/linear_regression_mean_injuries_in_crashes_chicago.png")
+    #plt.savefig("images/linear_regression_mean_injuries_in_crashes_chicago.png")
     plt.close()
 
     # Coeficientes de la regresión
