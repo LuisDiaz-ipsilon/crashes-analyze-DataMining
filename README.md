@@ -25,7 +25,7 @@
 
 ![TEXT](/images/06_crash_hour_posted_speed_limit.png)
 
-![TEXT](/images/07_kmeans_crashes_2017_2023.png)
+![TEXT](/images/07_kmeans_crashes_2017_2023.PNG)
 
 ![TEXT](/images/08_timeSeries_forecasting_crashesh_alcohol_forecasting.png)
 
