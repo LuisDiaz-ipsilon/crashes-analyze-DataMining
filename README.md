@@ -35,6 +35,8 @@
 
 ![TEXT](/images/08_timeSeries_forecasting_crashesh_texting.png)
 
+![TEXT](/images/09_world_cloud_causes_crashes.png)
+
 ![TEXT](/images/04_anova_grey_hour.PNG)
 
 ![TEXT](/images/04_cluster3_maps.PNG)
